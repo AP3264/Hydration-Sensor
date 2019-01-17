@@ -12,6 +12,7 @@ int incomingByte = 0;
 int rngTotal = 0;
 int avgPer = 0;
 int done = 0;
+float voltage;
 
 
 void setup(){
@@ -28,7 +29,8 @@ void loop(){
 timedOn.check();
 timedOff.check();
 rdgTimer.check();
-
+//Serial.println("Data Output:");
+//Serial.println(analogRead(A0));
 }
 
 void blink(){
@@ -37,23 +39,29 @@ timedOff.enable();
 rdgTimer.enable();
 digitalWrite(ledPin,HIGH);
 
-int i = 0;
 }
 
 void read(){
  incomingByte = analogRead(A0);
  Serial.println(incomingByte, DEC);
  rngTotal = rngTotal+incomingByte;
- i++;
- if(i < 10)
+ done++;
+ if(done < 10)
  {
    rdgTimer.reset();
  }
- else
+ else if (done == 10)
  {
-   rdgTimer.disable();
+   done = 0;
    avgPer = rngTotal/10;
-   Serial.println(avgPer, DEC);
+   Serial.println("Average:");
+   voltage = (avgPer / 1023.0) * 5.0;
+   Serial.println(voltage, DEC);
+   Serial.println();
+   rngTotal = 0;
+ }
+ else {
+     rdgTimer.disable();
  }
 }
 
