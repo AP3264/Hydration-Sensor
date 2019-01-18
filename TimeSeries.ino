@@ -16,6 +16,7 @@ float voltage;
 
 
 void setup(){
+timedOn.reset();
 timedOn.enable();
 timedOff.disable();
 rdgTimer.disable();
@@ -34,8 +35,9 @@ rdgTimer.check();
 }
 
 void blink(){
-timedOn.reset();
 timedOn.disable();
+timedOff.reset();
+rdgTimer.reset();
 timedOff.enable();
 rdgTimer.enable();
 digitalWrite(ledPin,HIGH);
@@ -62,7 +64,6 @@ void read(){
    rngTotal = 0;
  }
  else {
-     rdgTimer.reset();
      rdgTimer.disable();
  }
 }
