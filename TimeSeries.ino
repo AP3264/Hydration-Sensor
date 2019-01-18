@@ -22,7 +22,7 @@ rdgTimer.disable();
 
 pinMode(ledPin,OUTPUT);
 Serial.begin(9600);
-digitalWrite(ledPin,HIGH);
+digitalWrite(ledPin, LOW);
 }
 
 void loop(){
