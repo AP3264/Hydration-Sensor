@@ -34,6 +34,7 @@ rdgTimer.check();
 }
 
 void blink(){
+timedOn.reset();
 timedOn.disable();
 timedOff.enable();
 rdgTimer.enable();
@@ -61,12 +62,14 @@ void read(){
    rngTotal = 0;
  }
  else {
+     rdgTimer.reset();
      rdgTimer.disable();
  }
 }
 
 
 void blinkOff() {
+timedOff.reset();
 timedOff.disable();
 timedOn.enable();
 digitalWrite(ledPin, LOW);
