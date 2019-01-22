@@ -1,7 +1,9 @@
+
 #include <TimedAction.h>
+#include <math.h>
 
 //this initializes a TimedAction class that will change the state of an LED every second.
-TimedAction timedOn = TimedAction(10,blink);
+TimedAction timedOn = TimedAction(50,blink);
 TimedAction timedOff = TimedAction(100,blinkOff);
 TimedAction rdgTimer = TimedAction(10,read);
 
@@ -20,7 +22,7 @@ float voltage;
 
 
 void setup(){
-timedOn.reset();
+//timedOn.reset();
 timedOn.enable();
 timedOff.disable();
 rdgTimer.disable();
@@ -29,7 +31,9 @@ pinMode(ledPin1,OUTPUT);
 pinMode(ledPin,OUTPUT);
 pinMode(ledPin2,OUTPUT);
 Serial.begin(9600);
-digitalWrite(ledPin, LOW);
+digitalWrite(ledPin, HIGH);
+digitalWrite(ledPin1, HIGH);
+digitalWrite(ledPin2, HIGH);
 }
 
 void loop(){
@@ -47,17 +51,14 @@ rdgTimer.reset();
 timedOff.enable();
 rdgTimer.enable();
 if (count == 0){
-  digitalWrite(ledPin,HIGH);
+  digitalWrite(ledPin,LOW);
 }
 else if (count == 1){
-  digitalWrite(ledPin1,HIGH);
+  digitalWrite(ledPin1,LOW);
 }
 else if (count == 2){
-  digitalWrite(ledPin2,HIGH);
+  digitalWrite(ledPin2,LOW);
   }
-count ++;
-count = count%3;
-
 }
 
 void read(){
@@ -65,15 +66,16 @@ void read(){
  Serial.println(incomingByte, DEC);
  rngTotal = rngTotal+incomingByte;
  done++;
- if(done < 10)
+ if(done < 80)
  {
    rdgTimer.reset();
  }
- else if (done == 10)
+ else if (done == 80)
  {
    done = 0;
-   avgPer = rngTotal/10;
+   avgPer = rngTotal/80;
    Serial.println("Average:");
+   Serial.println(count);
    voltage = (avgPer / 1023.0) * 5.0;
    Serial.println(voltage, DEC);
    Serial.println();
@@ -89,13 +91,16 @@ void blinkOff() {
 timedOff.disable();
 timedOn.reset();
 timedOn.enable();
+
 if (count == 0){
-  digitalWrite(ledPin, LOW);
+  digitalWrite(ledPin, HIGH);
 }
 else if (count == 1){
-  digitalWrite(ledPin1, LOW);
+  digitalWrite(ledPin1, HIGH);
 }
 else if (count == 2){
-  digitalWrite(ledPin2, LOW);
+  digitalWrite(ledPin2, HIGH);
 }
+count ++;
+count = count%3;
 }
