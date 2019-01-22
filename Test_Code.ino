@@ -10,7 +10,6 @@ TimedAction rdgTimer = TimedAction(10,read);
 #define ledPin1 12
 #define ledPin2 11
 
-
 boolean ledState = false;
 int incomingByte = 0;
 int rngTotal = 0;
@@ -27,6 +26,8 @@ timedOff.disable();
 rdgTimer.disable();
 
 pinMode(ledPin1,OUTPUT);
+pinMode(ledPin,OUTPUT);
+pinMode(ledPin2,OUTPUT);
 Serial.begin(9600);
 digitalWrite(ledPin, LOW);
 }
@@ -45,7 +46,6 @@ timedOff.reset();
 rdgTimer.reset();
 timedOff.enable();
 rdgTimer.enable();
-
 if (count == 0){
   digitalWrite(ledPin,HIGH);
 }
@@ -57,6 +57,7 @@ else if (count == 2){
   }
 count ++;
 count = count%3;
+
 }
 
 void read(){
@@ -97,5 +98,4 @@ else if (count == 1){
 else if (count == 2){
   digitalWrite(ledPin2, LOW);
 }
-
 }
