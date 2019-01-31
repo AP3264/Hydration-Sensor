@@ -5,7 +5,15 @@
 //this initializes a TimedAction class that will change the state of an LED every second.
 TimedAction timedOn = TimedAction(10,blink); 
 TimedAction timedOff = TimedAction(100,blinkOff);
-TimedAction rdgTimer = TimedAction(4,read);
+TimedAction rdgTimer = TimedAction(1,read);
+TimedAction listTimer = TimedAction(330, average);
+TimedAction fullCycle = TimedAction(500, cycle);
+
+#define NUM_MEASUREMENTS 50
+
+int list1[NUM_MEASUREMENTS]; // array of # of measurements
+int list2[NUM_MEASUREMENTS];
+int list3[NUM_MEASUREMENTS];
 
 unsigned long time;
 
@@ -21,12 +29,13 @@ int avgPer = 0;
 int done = 0;
 int count = 0;
 float voltage;
-unsigned long start;
-unsigned long end2;
+int i;
 
 void setup(){
   timedOn.reset();
   timedOn.enable();
+  listTimer.enable();
+  fullCycle.enable();
   timedOff.disable();
   rdgTimer.disable();
   
@@ -43,17 +52,11 @@ void loop(){
   timedOn.check();
   timedOff.check();
   rdgTimer.check();
-  //Serial.println("Data Output:");
-  //Serial.println(analogRead(A0));
-  time = millis();
+  listTimer.check();
+  fullCycle.check();
 }
 
 void blink(){
-  unsigned long stop1 = micros();
-  //Serial.println("Time Difference");
-  //Serial.print(stop1 - start);
-  Serial.println("In blink");
-  //Serial.println(time);
   timedOn.disable();
   timedOff.reset();
   rdgTimer.reset();
@@ -67,64 +70,104 @@ void blink(){
   }
   else if (count == 2){
     digitalWrite(ledPin2,LOW);
-    }
+  }
 }
 
 void read(){
- start = micros();
- Serial.println("In read");
-  //Serial.println(time);
- if(done < 4)
+ if(done < NUM_MEASUREMENTS)
  {
   incomingByte = analogRead(A0);
-  Serial.println(incomingByte, DEC);
+  // insert measurement to the list
+  for(i=0; i<NUM_MEASUREMENTS; i++) {
+    if (count == 0) { // LED = 670
+        list1[i] = incomingByte;
+    }
+     if (count == 1) { // LED = 850
+        list2[i] = incomingByte;
+    }
+     if (count == 2) { // LED = 950
+        list3[i] = incomingByte;
+    }
+  }
+  //Serial.println(incomingByte, DEC);
   rngTotal = rngTotal+incomingByte;
   done++;
   rdgTimer.reset();
  }
- else if (done == 4)
+ else if (done == NUM_MEASUREMENTS)
  {
-   end2 = micros();
    done = 0;
-   //Serial.println("Taking measurements");
+   
+   // insert last measurement
    incomingByte = analogRead(A0);
-   Serial.println();
-   Serial.print("Last measurement: ");
-   //rdgTimer.disable();
-   Serial.print(incomingByte, DEC);
+   if (count == 0) { // LED = 540
+      list1[NUM_MEASUREMENTS-1] = incomingByte;
+    }
+   if (count == 1) { // LED = 650
+      list2[NUM_MEASUREMENTS-1] = incomingByte;
+    }
+   if (count == 2) { // LED = 750
+      list3[NUM_MEASUREMENTS-1] = incomingByte;
+    }
+  
+   //Serial.print(incomingByte, DEC);
    rngTotal = rngTotal+incomingByte;
 
-   Serial.println();
-   Serial.print("Last measurement - First Measurement: ");
-   Serial.print(end2 - start);
 
-//   Serial.println();
-//   Serial.print("Start: ");
-//   Serial.print(start);
-//   Serial.println();
-//   Serial.print("End2: ");
-//   Serial.print(end2);
-//   Serial.println();
-
-   // Reset
-   start = 0;
-   end2=0;
-
-   avgPer = rngTotal/5;
-   Serial.println("Average:");
-   voltage = (avgPer / 1023.0) * 5.0;
-   Serial.println(voltage, DEC);
-   Serial.println();
-   rngTotal = 0;
+//// Averaging
+//   avgPer = rngTotal/5;
+////   Serial.println("Average:");
+//   voltage = (avgPer / 1023.0) * 5.0;
+////   Serial.println(voltage, DEC);
+//   rngTotal = 0;
 
    rdgTimer.disable();
  }
 }
 
+void average() {
+  rdgTimer.disable();
+  timedOn.disable();
+  timedOff.disable();
+  Serial.println("List 1: ");
+  for(i=0;i<NUM_MEASUREMENTS;i++)
+  {
+    
+    Serial.println(list1[i]);
+  }
+    Serial.println("List 2: ");
+    for(i=0;i<NUM_MEASUREMENTS;i++)
+  {
+
+    Serial.println(list2[i]);
+  }
+    Serial.println("List 3: ");
+    for(i=0;i<NUM_MEASUREMENTS;i++)
+  {
+    
+    Serial.println(list3[i]);
+  }
+
+   
+
+
+}
+
+//enable timers in the 5th timer
+void cycle() {
+  timedOff.enable();
+  timedOn.enable();
+  rdgTimer.enable();
+  listTimer.enable();
+
+  // clear the lists 
+
+    memset(list1, NULL, sizeof(list1));
+    memset(list2, NULL, sizeof(list2));
+    memset(list3, NULL, sizeof(list3));
+}
 
 void blinkOff() {
-  Serial.println("In blinkoff");
-  //Serial.println(time);
   timedOff.disable();
   timedOn.reset();
   timedOn.enable();
