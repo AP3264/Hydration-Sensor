@@ -17,7 +17,9 @@ unsigned long timer;
 
 void setup( void )
 {
-  Serial.begin( 1000000 );
+  Serial.begin( 38400 );
+  while(!Serial){
+    }
   pinMode (ledPin670, OUTPUT);
   pinMode (ledPin850, OUTPUT);
   pinMode (ledPin950, OUTPUT);
@@ -32,7 +34,8 @@ void loop( void )
 {
   if ( millis() - Start < 100 )
   {
-    Serial.println("0");
+    //Serial.read();
+    Serial.println("123");
     digitalWrite(ledPin670,LOW);
     analogRead( A0 );
     valList670.add(analogRead( A0 ));
@@ -40,11 +43,12 @@ void loop( void )
     ++Count;
   }
   else if ((millis() - Start >= 100) && (millis() - Start < 110)){
-    
+    digitalWrite(ledPin670,HIGH);
     }
   else if ((millis() - Start >= 110) && (millis() - Start < 220))
   {
-    Serial.println("0");
+//    Serial.read();
+    Serial.println("12124");
     digitalWrite(ledPin670,HIGH);
     digitalWrite(ledPin850,LOW);
     int x = analogRead( A0 );
@@ -53,11 +57,12 @@ void loop( void )
     ++Count2;
   }
   else if ((millis() - Start >= 220) && (millis() - Start < 230)){
-//    delay(10);
+    digitalWrite(ledPin850,HIGH);
     }
   else if ((millis() - Start >= 230) && (millis() - Start < 330))
   {
-    Serial.println("0");
+    //Serial.read();
+    Serial.println("12413");
     digitalWrite(ledPin850,HIGH);
     digitalWrite(ledPin950,LOW);
     analogRead( A0 );
@@ -73,46 +78,43 @@ void loop( void )
     Serial.println( Count );
     Serial.println( Count2 );
     Serial.println( Count3 );
-//    arrayLoop(valList670, time670,10);
-//    arrayLoop(valList850, time850,10);
-//    arrayLoop(valList950, time950,10);
+    arrayLoop(valList670, time670,10);
+    arrayLoop(valList850, time850,10);
+    arrayLoop(valList950, time950,10);
 
    int listSize = valList670.size();
    int listSize1 = valList850.size();
    int listSize2= valList950.size();
    //Serial.println(time670.size());
     
-    for (int h = 0; h < listSize; h+=2) {
-      if (h <= listSize){
-        int val = valList670.get(h);
-        unsigned long tim = time670.get(h);
-        Serial.print("time: ");
-        Serial.print(tim);
-        Serial.print(" value: ");
-        Serial.println(val);
-      }
-    }
-      
-    for (int h = 0; h < listSize1; h+=2) {
-      if (h <= listSize1){
-        int val = valList850.get(h);
-        unsigned long tim = time850.get(h);
-        Serial.print("time: ");
-        Serial.print(tim);
-        Serial.print(" value: ");
-        Serial.println(val);
-      }
-    }
-    for (int h = 0; h < listSize2; h+=2) {
-      if (h <= listSize2){
-        int val = valList950.get(h);
-        unsigned long tim = time950.get(h);
-        Serial.print("time: ");
-        Serial.print(tim);
-        Serial.print(" value: ");
-        Serial.println(val);
-      }
-    }
+//    for (int h = 0; h < listSize; h+=2) {
+//      if (h <= listSize){
+//        int val = valList670.get(h);
+//        unsigned long tim = time670.get(h);
+//        Serial.print(tim);
+//        Serial.print("\t\t");
+//        Serial.println(val);
+//      }
+//    }
+//      
+//    for (int h = 0; h < listSize1; h+=2) {
+//      if (h <= listSize1){
+//        int val = valList850.get(h);
+//        unsigned long tim = time850.get(h);
+//        Serial.print(tim);
+//        Serial.print("\t\t");
+//        Serial.println(val);
+//      }
+//    }
+//    for (int h = 0; h < listSize2; h+=2) {
+//      if (h <= listSize2){
+//        int val = valList950.get(h);
+//        unsigned long tim = time950.get(h);
+//        Serial.print(tim);
+//        Serial.print("\t\t");
+//        Serial.println(val);
+//      }
+//    }
       
     valList670.clear();
     valList850.clear();
@@ -132,7 +134,7 @@ void loop( void )
   }
 }
 
-void arrayLoop(LinkedList<int> pinNum,LinkedList<unsigned long> timer, int valDiff){
+void arrayLoop(LinkedList<int> &pinNum,LinkedList<unsigned long> &timer, int valDiff){
 //  Serial.println(pinNum);
   int listSize = pinNum.size();
   for (int h = 0; h < listSize; h+=valDiff) {
@@ -140,9 +142,8 @@ void arrayLoop(LinkedList<int> pinNum,LinkedList<unsigned long> timer, int valDi
       if (h <= listSize){
         int val = pinNum.get(h);
         unsigned long tim = timer.get(h);
-        Serial.print("time: ");
         Serial.print(tim);
-        Serial.print(" reading: ");
+        Serial.print("\t");
         Serial.println(val);
       }
   }
