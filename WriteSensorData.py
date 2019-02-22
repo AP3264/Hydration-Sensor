@@ -1,3 +1,7 @@
+#Drexel University - Senior Design
+#Hydration Sensor - Team 18
+#Anav Pradhan, Anishi Patel, Tyler Harris, Nicholas Joseph
+
 from tkinter import Tk, Label, Button
 import matplotlib.pyplot as plt
 import serial
@@ -89,6 +93,7 @@ class MainProgram:
         file670 = open("file670.txt", 'w+')
         file850 = open("file850.txt", 'w+')
         file950 = open("file950.txt", 'w+')
+        fileAllPoints = open('fileAllPoints.txt', 'w+')
         f = file670
 
         fh = open("datatmp.txt")
@@ -128,6 +133,7 @@ class MainProgram:
 
             else:
                 f.write(line)
+                fileAllPoints.write(line)
 
         fh.close()
 
@@ -140,27 +146,38 @@ class MainProgram:
         if self.ser is not None:
             print("Connected")
 
-        self.save_result(self.ser, self.fname, 60)
+        self.save_result(self.ser, self.fname, 30)
         self.remove_lines(self.fname)
         self.save_wave()
 
     def plotGraph(self):
         with open('file670.txt') as f:
             lines = f.readlines()
-            x = [int(line.split()[0]) / 1000 for line in lines]
+            x = [int(line.split()[0]) / 1000.0 for line in lines]
             y = [float(line.split()[1]) for line in lines]
+
+
         with open('file850.txt') as f:
             lines = f.readlines()
-            x2 = [int(line.split()[0]) / 1000 for line in lines]
+            x2 = [int(line.split()[0]) / 1000.0 for line in lines]
             y2 = [float(line.split()[1]) for line in lines]
+
         with open('file950.txt') as f:
             lines = f.readlines()
-            x3 = [int(line.split()[0]) / 1000 for line in lines]
+            x3 = [int(line.split()[0]) / 1000.0 for line in lines]
             y3 = [float(line.split()[1]) for line in lines]
 
-        plt.plot(x, y, 'ro')
+        with open('fileAllPoints.txt') as f:
+            lines = f.readlines()
+            xall = [int(line.split()[0]) / 1000.0 for line in lines]
+            yall = [float(line.split()[1]) for line in lines]
+
+
+        plt.plot(x, y, 'rx')
         plt.plot(x2, y2, 'yx')
         plt.plot(x3, y3, 'gx')
+        plt.plot(xall,yall, linestyle = '-')
+        plt.ylim(0, 5)
         plt.show()
 
 root = Tk()
