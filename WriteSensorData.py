@@ -7,18 +7,22 @@ import matplotlib.pyplot as plt
 import serial
 import time
 import os
+import datetime
 
+now = datetime.datetime.now()
+
+current_dir = os.getcwd()
+final_directory = os.path.join(current_dir, r'Files')
+if not os.path.exists(final_directory):
+    os.makedirs(final_directory)
+
+final_dir = final_directory + "\\"
 
 class MainProgram:
 
-    com = "com8"
-    connected = False
-    ser = None
-    fname = "data.txt"
-
     def __init__(self, master):
         self.master = master
-        self.com = "com4"
+        self.com = "com8"
         self.connected = False
         self.ser = None
         self.fname = "data.txt"
@@ -35,9 +39,6 @@ class MainProgram:
 
         self.close_button = Button(master, text="Close", command=master.quit)
         self.close_button.pack()
-
-    def greet(self):
-        print("Greetings!")
 
 
     def save_result(self, serial, file_name, time_val=5):
@@ -83,18 +84,45 @@ class MainProgram:
         out.close()
 
     def save_wave(self):
+
+
+            
         counter = 0
         prev_count = 0
         ident = " \n"
         is670 = True
         is850 = False
         is950 = False
+
+        CycleTime = 500
+        CyclePeriod = 500
+
+        timestr = time.strftime("%Y%m%d-%H%M%S")
         # isPattern = False
-        file670 = open("file670.txt", 'w+')
-        file850 = open("file850.txt", 'w+')
-        file950 = open("file950.txt", 'w+')
-        fileAllPoints = open('fileAllPoints.txt', 'w+')
+        file670 = open(final_dir+"file670_"+ timestr +".txt", 'w+')
+        file850 = open(final_dir+"file850_"+ timestr +".txt", 'w+')
+        file950 = open(final_dir+"file950_"+ timestr +".txt", 'w+')
+        fileAllPoints = open(final_dir+"fileAllPoints_"+ timestr +".txt", 'w+')
+
+        temp670 = open(final_dir+"file670.txt", 'w+')
+        temp850 = open(final_dir+"file850.txt", 'w+')
+        temp950 = open(final_dir+"file950.txt", 'w+')
+        tempAllPoints = open(final_dir+'fileAllPoints.txt', 'w+')
+
+        avg670 = open(final_dir+"avg670_" + timestr + ".txt", 'w+')
+        avg850 = open(final_dir+"avg850_" + timestr + ".txt", 'w+')
+        avg950 = open(final_dir+"avg950_" + timestr + ".txt", 'w+')
+        avgAllPoints = open(final_dir+"avgAllPoints_" + timestr + ".txt", 'w+')
+
+        fileList = [file670,file850,file950,fileAllPoints,tempAllPoints,temp670,temp850,temp950,avg670,avg850,avg950,avgAllPoints]
+        for file in fileList:
+            file.write(self.add_headers())
+
+
+        listOfVals =[]
+
         f = file670
+        t = temp670
 
         fh = open("datatmp.txt")
         for line in fh:
@@ -102,40 +130,70 @@ class MainProgram:
             if line == ident and is950 == True:
                 prev_count = counter
                 counter += 1
-                print(counter)
+                # print(counter)
                 # print(prevCount)
                 if prev_count == 3:
                     is950 = False
                     # do sth
-                    print("Happening")
+                    # print("Happening")
                     f = file670
+                    t = temp670
                     is670 = True
-                    counter = 0
-                    # prevCount = 0
+                    averagedVal = sum(listOfVals) / len(listOfVals)
+                    avgLine = str(CycleTime) + '\t' + str(averagedVal)+ '\n'
+                    avg950.write(avgLine)
+                    avgAllPoints.write(avgLine)
+                    listOfVals.clear()
 
-            #        elif line == ident and isPattern == True:
-            #            print("670")
-            #            is670 = True
-            #            isPattern = False
-            #            f = file670
+                    CycleTime +=CyclePeriod
+
+                    counter = 0
 
             elif line == ident and is670 == True:
                 print("850")
                 is850 = True
                 is670 = False
                 f = file850
+                t = temp850
+                averagedVal = sum(listOfVals)/len(listOfVals)
+                avgLine = str(CycleTime) + '\t' + str(averagedVal) + '\n'
+                avg670.write(avgLine)
+                avgAllPoints.write(avgLine)
+                listOfVals.clear()
 
             elif line == ident and is850 == True:
                 print("950")
                 is950 = True
                 is850 = False
                 f = file950
+                t = temp950
+                averagedVal = sum(listOfVals) / len(listOfVals)
+                avgLine = str(CycleTime) + '\t' + str(averagedVal)+ '\n'
+                avg850.write(avgLine)
+                avgAllPoints.write(avgLine)
+                listOfVals.clear()
 
             else:
                 f.write(line)
+                t.write(line)
                 fileAllPoints.write(line)
+                tempAllPoints.write(line)
+
+                lineVal = line.rstrip('\n')
+                listOfVals.append(float(lineVal.split("\t")[1]))
+                # print(listOfVals)
 
         fh.close()
+
+
+    def add_headers(self):
+
+        line1 = now.strftime('%Y-%m-%d %H:%M')+'\n'
+        line2 = "Team 18"+'\n'
+        line3 = "Tyler Harris, Nicholas Joseph, Anishi Patel, Anav Pradhan"+'\n'
+        line4 = 'Non-Invasive Hydration Sensing System'+'\n\n'
+
+        return line1+line2+line3+line4
 
 
     def log_data(self):
@@ -146,38 +204,50 @@ class MainProgram:
         if self.ser is not None:
             print("Connected")
 
-        self.save_result(self.ser, self.fname, 30)
+        self.save_result(self.ser, self.fname, 10)
         self.remove_lines(self.fname)
         self.save_wave()
 
     def plotGraph(self):
-        with open('file670.txt') as f:
-            lines = f.readlines()
-            x = [int(line.split()[0]) / 1000.0 for line in lines]
-            y = [float(line.split()[1]) for line in lines]
 
+        x = []
+        y = []
+        x2 = []
+        y2 = []
+        x3 = []
+        y3 = []
+        xall = []
+        yall = []
+        with open(final_dir+'file670.txt') as f:
+            for i, line in enumerate(f):
+                if i > 5:
+                    x.append(int(line.split()[0]) / 1000.0)
+                    y.append(float(line.split()[1])*1000)
 
-        with open('file850.txt') as f:
-            lines = f.readlines()
-            x2 = [int(line.split()[0]) / 1000.0 for line in lines]
-            y2 = [float(line.split()[1]) for line in lines]
+        with open(final_dir+'file850.txt') as f:
+            for i, line in enumerate(f):
+                if i > 5:
+                    x2.append(int(line.split()[0]) / 1000.0)
+                    y2.append(float(line.split()[1])*1000)
 
-        with open('file950.txt') as f:
-            lines = f.readlines()
-            x3 = [int(line.split()[0]) / 1000.0 for line in lines]
-            y3 = [float(line.split()[1]) for line in lines]
+        with open(final_dir+'file950.txt') as f:
+            for i, line in enumerate(f):
+                if i > 5:
+                    x3.append(int(line.split()[0]) / 1000.0)
+                    y3.append(float(line.split()[1])*1000)
 
-        with open('fileAllPoints.txt') as f:
-            lines = f.readlines()
-            xall = [int(line.split()[0]) / 1000.0 for line in lines]
-            yall = [float(line.split()[1]) for line in lines]
+        with open(final_dir+'fileAllPoints.txt') as f:
+            for i, line in enumerate(f):
+                if i > 5:
+                    xall.append(int(line.split()[0]) / 1000.0)
+                    yall.append(float(line.split()[1])*1000)
 
 
         plt.plot(x, y, 'rx')
         plt.plot(x2, y2, 'yx')
         plt.plot(x3, y3, 'gx')
         plt.plot(xall,yall, linestyle = '-')
-        plt.ylim(0, 5)
+        plt.ylim(0, 500)
         plt.show()
 
 root = Tk()
