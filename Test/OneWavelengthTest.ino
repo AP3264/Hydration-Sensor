@@ -19,7 +19,7 @@ unsigned long timer;
 #define CycleTime 100
 #define PauseTime 10
 
-int adc0
+int adc0;
 
 void setup( void )
 {
@@ -27,7 +27,7 @@ void setup( void )
   while(!Serial){}
   Wire.begin();
 
-  ads1015.begin();
+  adc.begin();
   
   pinMode (ledPin670, OUTPUT);
 
@@ -44,10 +44,10 @@ void set_pot_val(int byteVal)
     Wire.endTransmission();
 }
 
-void add_to_list(LinkedList<int> &pinNum,LinkedList<unsigned long> &timer)
+void add_to_list(LinkedList<int> &pinNum,LinkedList<unsigned long> &timerList)
 {
     pinNum.add(adc.readADC_SingleEnded(0));
-    timer.add(micros() - timer);
+    timerList.add(micros() - timer);
 }
 
 void print_to_ser(LinkedList<int> &pinNum,LinkedList<unsigned long> &timer, int valDiff)
@@ -81,7 +81,7 @@ void loop( void )
       Serial.println(" ");
     }
     delay(readSpeed);
-    digitalWrite(pinNum,LOW);
+    digitalWrite(ledPin670,LOW);
     adc0 = adc.readADC_SingleEnded(0);
     add_to_list(valList670, time670);
     ++Count;
