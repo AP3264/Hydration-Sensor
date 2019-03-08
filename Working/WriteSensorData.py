@@ -1,53 +1,85 @@
-#Drexel University - Senior Design
-#Hydration Sensor - Team 18
-#Anav Pradhan, Anishi Patel, Tyler Harris, Nicholas Joseph
+##Hydration Sensor
+##Senior Design - Team 18
+##Anav Pradhan, Anishi Patel, Nicholas Joseph, Tyler Harris
+##Python User Interface/Post Processing Script
 
-from tkinter import Tk, Label, Button
+from tkinter import *
 import matplotlib.pyplot as plt
 import serial
 import time
 import os
 import datetime
 
+#set datetime for folder naming
 now = datetime.datetime.now()
 
+#get current directory for folder creation
 current_dir = os.getcwd()
 final_directory = os.path.join(current_dir, r'Files')
 if not os.path.exists(final_directory):
     os.makedirs(final_directory)
-
 final_dir = final_directory + "\\"
 
 class MainProgram:
 
     def __init__(self, master):
         self.master = master
-        self.com = "com8"
+        self.com = "com7"
         self.connected = False
         self.ser = None
         self.fname = "data.txt"
-        master.title("A simple GUI")
+        master.title("Hydration Sensor")
 
-        self.label = Label(master, text="Hydration Sensor!")
-        self.label.pack()
+        # create buttons for GUI
+        self.img = PhotoImage(file='Drexel_Logo.gif')
+        self.img = self.img.zoom(20, 5)
+        self.img = self.img.subsample(60, 15)
+        self.img_label = Label(master, image=self.img)
+        self.img_label.pack()
 
-        self.greet_button = Button(master, text="Log Data", command=self.log_data)
-        self.greet_button.pack()
+        self.label = Label(master, text="Hydration Sensor")
+        self.label.config(font=('Helvetica',16, 'bold'))
+        self.label.pack(fill=X,pady=10)
 
-        self.plot_button = Button(master, text="Plot Data", command=self.plotGraph)
-        self.plot_button.pack()
+        self.log_button = Button(master, text="Log Data", command=self.log_data, bg = 'chartreuse3',width=20)
+        self.log_button.config(font=('Helvetica',12, 'bold'))
+        self.log_button.pack(pady=5)
 
-        self.close_button = Button(master, text="Close", command=master.quit)
-        self.close_button.pack()
+        self.plot_button = Button(master, text="Plot Data", bg = 'azure',command=self.plotGraph,width=20)
+        self.plot_button.config(font=('Helvetica',12, 'bold'))
+        self.plot_button.pack(pady=5)
+
+        self.close_button = Button(master, text="Close", command=master.quit, bg='orangered2', width=20)
+        self.close_button.config(font=('Helvetica',12, 'bold'))
+        self.close_button.pack(pady=5)
 
 
+
+
+
+    # open serial port for connection and start the program
+    def log_data(self):
+        ##    try:
+        print("Trying to connect to", self.com)
+        self.ser = serial.Serial(self.com, 38400)
+        print(self.ser)
+        if self.ser is not None:
+            print("Connected")
+
+        self.save_result(self.ser, self.fname, 15)
+        self.remove_lines(self.fname)
+        self.save_wave()
+        print('Done!')
+
+    # parse incoming data and save to file
     def save_result(self, serial, file_name, time_val=5):
         val = True
         text_file = open(file_name, 'w+')
+        count = 0
 
-        print(serial.readable())
+        print('Readable =',serial.readable())
         start = time.time()
-        print(start)
+        print('Collecting data from serial', end='')
 
         while val is True:
             msg = str(serial.readline())
@@ -57,14 +89,18 @@ class MainProgram:
             # print(msg)
             text_file.write(msg)
             end = time.time()
+            count += 1
+            if (count % 15) == 0:
+                print('.', end='')
 
             if (end - start) >= time_val:
-                print("done")
+                print("Done collecting data from serial")
                 val = False
 
         text_file.close()
         serial.close()
 
+    # remove first empty lines from serial
     def remove_lines(self, file_name):
         n = 3
         n_first_lines = []
@@ -83,10 +119,11 @@ class MainProgram:
         f.close()
         out.close()
 
+    # folder and file creation, parsing and sorting
     def save_wave(self):
+        print('Creating files and saving data', end='')
 
-
-            
+        count_dot = 0
         counter = 0
         prev_count = 0
         ident = " \n"
@@ -150,7 +187,7 @@ class MainProgram:
                     counter = 0
 
             elif line == ident and is670 == True:
-                print("850")
+                #print("850")
                 is850 = True
                 is670 = False
                 f = file850
@@ -162,7 +199,7 @@ class MainProgram:
                 listOfVals.clear()
 
             elif line == ident and is850 == True:
-                print("950")
+                #print("950")
                 is950 = True
                 is850 = False
                 f = file950
@@ -174,6 +211,9 @@ class MainProgram:
                 listOfVals.clear()
 
             else:
+                count_dot += 1
+                if (count_dot % 45) == 0:
+                    print('.', end='')
                 f.write(line)
                 t.write(line)
                 fileAllPoints.write(line)
@@ -184,32 +224,37 @@ class MainProgram:
                 # print(listOfVals)
 
         fh.close()
+        file670.close()
+        file850.close()
+        file950.close()
+        fileAllPoints.close()
+        avg670.close()
+        avg850.close()
+        avg950.close()
+        avgAllPoints.close()
+        temp670.close()
+        temp850.close()
+        temp950.close()
+        tempAllPoints.close()
 
-
+    # add headers to text file
     def add_headers(self):
 
         line1 = now.strftime('%Y-%m-%d %H:%M')+'\n'
         line2 = "Team 18"+'\n'
         line3 = "Tyler Harris, Nicholas Joseph, Anishi Patel, Anav Pradhan"+'\n'
         line4 = 'Non-Invasive Hydration Sensing System'+'\n\n'
+        line5 = 'Time(us)\tVoltage(mv)\n'
 
-        return line1+line2+line3+line4
+        return line1+line2+line3+line4+line5
 
-
-    def log_data(self):
-        ##    try:
-        print("Trying to connect to", self.com)
-        self.ser = serial.Serial(self.com, 38400)
-        print(self.ser)
-        if self.ser is not None:
-            print("Connected")
-
-        self.save_result(self.ser, self.fname, 10)
-        self.remove_lines(self.fname)
-        self.save_wave()
-
+    # submenu
+    def file_selector(self):
+        sub = Tk()
+        sub.geometry('200x200')
+        
+    # grab data from text file and plot using matplotlib
     def plotGraph(self):
-
         x = []
         y = []
         x2 = []
@@ -220,37 +265,44 @@ class MainProgram:
         yall = []
         with open(final_dir+'file670.txt') as f:
             for i, line in enumerate(f):
-                if i > 5:
+                if i > 6:
                     x.append(int(line.split()[0]) / 1000.0)
-                    y.append(float(line.split()[1])*1000)
+                    y.append(float(line.split()[1]))
 
         with open(final_dir+'file850.txt') as f:
             for i, line in enumerate(f):
-                if i > 5:
+                if i > 6:
                     x2.append(int(line.split()[0]) / 1000.0)
-                    y2.append(float(line.split()[1])*1000)
+                    y2.append(float(line.split()[1]))
 
         with open(final_dir+'file950.txt') as f:
             for i, line in enumerate(f):
-                if i > 5:
+                if i > 6:
                     x3.append(int(line.split()[0]) / 1000.0)
-                    y3.append(float(line.split()[1])*1000)
+                    y3.append(float(line.split()[1]))
 
         with open(final_dir+'fileAllPoints.txt') as f:
             for i, line in enumerate(f):
-                if i > 5:
+                if i > 6:
                     xall.append(int(line.split()[0]) / 1000.0)
-                    yall.append(float(line.split()[1])*1000)
+                    yall.append(float(line.split()[1]))
 
 
-        plt.plot(x, y, 'rx')
-        plt.plot(x2, y2, 'yx')
-        plt.plot(x3, y3, 'gx')
-        plt.plot(xall,yall, linestyle = '-')
-        plt.ylim(0, 500)
+        plt.plot(x, y, 'rx-')
+        plt.plot(x2, y2, 'yx-')
+        plt.plot(x3, y3, 'gx-')
+        #plt.plot(xall,yall, linestyle = '-')
+        #plt.ylim(0, 5000)
+        plt.title('Voltage Sweep Over Time')
+        plt.xlabel('Time(ms)')
+        plt.ylabel('Voltage(mV)')
         plt.show()
 
-root = Tk()
-root.geometry('200x200')
-my_gui = MainProgram(root)
-root.mainloop()
+def main():
+    root = Tk()
+    root.geometry('400x250')
+    my_gui = MainProgram(root)
+    root.mainloop()
+
+if __name__ == '__main__':
+    main()
