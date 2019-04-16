@@ -51,6 +51,12 @@ class MainProgram:
         
         self.time_duration = Entry(master)
         self.time_duration.pack()
+        
+        test_label = Label(master, text="Enter Test Description: ")
+        test_label.pack()
+        
+        self.test_label = Entry(master)
+        self.test_label.pack()
 
         self.log_button = Button(master, text="Log Data", command=self.log_data, bg = 'chartreuse3',width=20)
         self.log_button.config(font=('Helvetica',12, 'bold'))
@@ -282,14 +288,19 @@ class MainProgram:
 
     # add headers to text file
     def add_headers(self):
+        
+        global test_label
+        test_label = self.test_label.get()
 
         line1 = now.strftime('%Y-%m-%d %H:%M')+'\n'
         line2 = "Team 18"+'\n'
         line3 = "Tyler Harris, Nicholas Joseph, Anishi Patel, Anav Pradhan"+'\n'
         line4 = 'Non-Invasive Hydration Sensing System'+'\n\n'
-        line5 = 'Time(us)\tVoltage(mv)\n'
+        line5 = "Test Description: " + test_label + '\n\n'
+        line6 = 'Time(us)\tVoltage(mv)\n'
+        line7 = "\n"
 
-        return line1+line2+line3+line4+line5
+        return line1+line2+line3+line4+line5+line6+line7
 
     # submenu
     def file_selector(self):
@@ -306,27 +317,27 @@ class MainProgram:
         y3 = []
         xall = []
         yall = []
-        with open(final_dir+'file670.txt') as f:
+        with open(final_dir+'tempAvg670.txt') as f:
             for i, line in enumerate(f):
-                if i > 6:
+                if i > 8:
                     x.append(int(line.split()[0]) / 1000.0)
                     y.append(float(line.split()[1]))
 
-        with open(final_dir+'file850.txt') as f:
+        with open(final_dir+'tempAvg850.txt') as f:
             for i, line in enumerate(f):
-                if i > 6:
+                if i > 8:
                     x2.append(int(line.split()[0]) / 1000.0)
                     y2.append(float(line.split()[1]))
 
-        with open(final_dir+'file950.txt') as f:
+        with open(final_dir+'tempAvg950.txt') as f:
             for i, line in enumerate(f):
-                if i > 6:
+                if i > 8:
                     x3.append(int(line.split()[0]) / 1000.0)
                     y3.append(float(line.split()[1]))
 
-        with open(final_dir+'fileAllPoints.txt') as f:
+        with open(final_dir+'avgAllPoint.txt') as f:
             for i, line in enumerate(f):
-                if i > 6:
+                if i > 8:
                     xall.append(int(line.split()[0]) / 1000.0)
                     yall.append(float(line.split()[1]))
 
@@ -357,24 +368,24 @@ class MainProgram:
         if len(selectedFiles) == 1:
             with open(selectedFiles[0]) as f:
                 for i, line in enumerate(f):
-                    if i > 6:
+                    if i > 8:
                         x.append(int(line.split()[0])/ 1000.0)
                         y.append(float(line.split()[1]))
         elif len(selectedFiles) == 2:
             with open(selectedFiles[0]) as f:
                 for i, line in enumerate(f):
-                    if i > 6:
+                    if i > 8:
                         x.append(int(line.split()[0])/ 1000.0)
                         y.append(float(line.split()[1]))
             with open(selectedFiles[1]) as f:
                 for i, line in enumerate(f):
-                    if i > 6:
+                    if i > 8:
                         x2.append(int(line.split()[0])/ 1000.0)
                         y2.append(float(line.split()[1]))
         elif len(selectedFiles) == 3:
             with open(selectedFiles[0]) as f:
                 for i, line in enumerate(f):
-                    if i > 6:
+                    if i > 8:
                         x.append(int(line.split()[0])/ 1000.0)
                         y.append(float(line.split()[1]))
             with open(selectedFiles[1]) as f:
@@ -384,30 +395,30 @@ class MainProgram:
                         y2.append(float(line.split()[1]))
             with open(selectedFiles[2]) as f:
                 for i, line in enumerate(f):
-                    if i > 6:
+                    if i > 8:
                         x3.append(int(line.split()[0])/ 1000.0)
                         y3.append(float(line.split()[1]))
         # 4 files selected
         else:
             with open(selectedFiles[0]) as f:
                 for i, line in enumerate(f):
-                    if i > 6:
+                    if i > 8:
                         x.append(int(line.split()[0])/ 1000.0)
                         y.append(float(line.split()[1]))
             with open(selectedFiles[1]) as f:
                 for i, line in enumerate(f):
-                    if i > 6:
+                    if i > 8:
                         x2.append(int(line.split()[0])/ 1000.0)
                         y2.append(float(line.split()[1]))
             with open(selectedFiles[2]) as f:
                 for i, line in enumerate(f):
-                    if i > 6:
+                    if i > 8:
                         x3.append(int(line.split()[0])/ 1000.0)
                         y3.append(float(line.split()[1]))
 
             with open(selectedFiles[3]) as f:
                 for i, line in enumerate(f):
-                    if i > 6:
+                    if i > 8:
                         xall.append(int(line.split()[0]) / 1000.0)
                         yall.append(float(line.split()[1]))          
 
@@ -432,4 +443,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
