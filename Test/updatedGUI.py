@@ -27,7 +27,7 @@ class MainProgram:
 
     def __init__(self, master):
         self.master = master
-        self.com = "/dev/cu.usbmodem141302"
+        self.com = "com7"
         self.connected = False
         self.ser = None
         self.fname = "data.txt"
@@ -44,6 +44,7 @@ class MainProgram:
         self.label = Label(master, text="Hydration Sensor")
         self.label.config(font=('Helvetica',16, 'bold'))
         self.label.pack(fill=X,pady=10)
+        
         
         # Enter time duration first!!! and then hit log data
         time_duration = Label(master, text="Enter Time Duration for Test (in sec): ")
@@ -167,7 +168,7 @@ class MainProgram:
         temp850 = open(final_dir+"file850.txt", 'w+')
         temp950 = open(final_dir+"file950.txt", 'w+')
         tempAllPoints = open(final_dir+'fileAllPoints.txt', 'w+')
-        tempAvgPoint = open(final_dir+'avgAllPoint.txt', 'w+')
+        tempAvgPoints = open(final_dir+'avgAllPoints.txt', 'w+')
         tempAvg670 = open(final_dir+"tempAvg670.txt", 'w+')
         tempAvg850 = open(final_dir+"tempAvg850.txt", 'w+')
         tempAvg950 = open(final_dir+"tempAvg950.txt", 'w+')
@@ -177,7 +178,7 @@ class MainProgram:
         avg950 = open(final_dir+"avg950_" + timestr + ".txt", 'w+')
         avgAllPoints = open(final_dir+"avgAllPoints_" + timestr + ".txt", 'w+')
 
-        fileList = [file670,file850,file950,fileAllPoints,tempAllPoints,tempAvg670, tempAvg850, tempAvg950, tempAvgPoint, temp670,temp850,temp950,avg670,avg850,avg950,avgAllPoints]
+        fileList = [file670,file850,file950,fileAllPoints,tempAllPoints,tempAvg670, tempAvg850, tempAvg950, tempAvgPoints, temp670,temp850,temp950,avg670,avg850,avg950,avgAllPoints]
         for file in fileList:
             file.write(self.add_headers())
 
@@ -284,11 +285,12 @@ class MainProgram:
         tempAvg670.close()
         tempAvg850.close()
         tempAvg950.close()
+        tempAvgPoints.close()
         tempAllPoints.close()
 
     # add headers to text file
     def add_headers(self):
-        
+
         global test_label
         test_label = self.test_label.get()
 
@@ -335,7 +337,7 @@ class MainProgram:
                     x3.append(int(line.split()[0]) / 1000.0)
                     y3.append(float(line.split()[1]))
 
-        with open(final_dir+'avgAllPoint.txt') as f:
+        with open(final_dir+'avgAllPoints.txt') as f:
             for i, line in enumerate(f):
                 if i > 8:
                     xall.append(int(line.split()[0]) / 1000.0)
@@ -390,7 +392,7 @@ class MainProgram:
                         y.append(float(line.split()[1]))
             with open(selectedFiles[1]) as f:
                 for i, line in enumerate(f):
-                    if i > 6:
+                    if i > 8:
                         x2.append(int(line.split()[0])/ 1000.0)
                         y2.append(float(line.split()[1]))
             with open(selectedFiles[2]) as f:
@@ -437,11 +439,9 @@ class MainProgram:
 
 def main():
     root = Tk()
-    root.geometry('400x250')
+    root.geometry('400x400')
     my_gui = MainProgram(root)
     root.mainloop()
 
 if __name__ == '__main__':
     main()
-
-
