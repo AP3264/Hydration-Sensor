@@ -11,7 +11,9 @@ import time
 import os
 import datetime
 import numpy as np
-import statistics 
+import statistics
+import serial.tools.list_ports
+import warnings
 
 #from pydrive.auth import GoogleAuth
 #from pydrive.drive import GoogleDrive
@@ -30,19 +32,32 @@ class MainProgram:
 
     def __init__(self, master):
         self.master = master
-        self.com = "/dev/cu.usbmodem144302"
+        self.com = ""
         self.connected = False
         self.ser = None
         self.fname = "data.txt"
         master.title("Hydration Sensor")
 #        self.time = 15
 
+        arduino_ports = [
+            p.device
+            for p in serial.tools.list_ports.comports()
+            if 'mEDBG' in p.description  # may need tweaking to match new arduinos
+        ]
+        print (arduino_ports)
+        if not arduino_ports:
+            raise IOError("No Arduino found")
+        if len(arduino_ports) > 1:
+            warnings.warn('Multiple Arduinos found - using the first')
+
+        self.com = arduino_ports[0]
+
         # create buttons for GUI
-#        self.img = PhotoImage(file='Drexel_Logo.gif')
-#        self.img = self.img.zoom(20, 5)
-#        self.img = self.img.subsample(60, 15)
-#        self.img_label = Label(master, image=self.img)
-#        self.img_label.pack()
+        self.img = PhotoImage(file='Drexel_Logo.gif')
+        self.img = self.img.zoom(20, 5)
+        self.img = self.img.subsample(60, 15)
+        self.img_label = Label(master, image=self.img)
+        self.img_label.pack()
 
         self.label = Label(master, text="Hydration Sensor")
         self.label.config(font=('Helvetica',16, 'bold'))
@@ -77,9 +92,9 @@ class MainProgram:
         self.test_label.pack()
 
         # Log Button
-        self.log_button = Button(master, text="Log Data", command=self.log_data, bg = 'chartreuse3',width=20)
+        self.log_button = Button(master, text="Log Data", command=self.log_data, bg = 'aquamarine2',width=20)
         self.log_button.config(font=('Helvetica',12, 'bold'))
-        self.log_button.pack(pady=5)
+        self.log_button.pack(padx = 5, pady=5)
         
         # Plot Button
         self.plot_button = Button(master, text="Plot Graph", bg = 'azure',command=self.plotGraph,width=20)
@@ -87,19 +102,19 @@ class MainProgram:
         self.plot_button.pack(pady=5)
         
         # Live Plot
-        self.live_plot_button = Button(master, text="Live Plot", bg = 'blue',command=self.LivePlot,width=20)
+        self.live_plot_button = Button(master, text="Live Plot", bg = 'SteelBlue1',command=self.LivePlot,width=20)
         self.live_plot_button.config(font=('Helvetica',12, 'bold'))
         self.live_plot_button.pack(pady=5)
         
         # Select Files to Plot
-        self.file_select = Button(master, text="Select up to 4 Files to Plot", bg = 'orange', command=self.plotSelectedGraph, width=20)
+        self.file_select = Button(master, text="Select up to 4 Files to Plot", bg = 'SlateBlue2', command=self.plotSelectedGraph, width=20)
         self.file_select.config(font=('Helvetica',12, 'bold'))
         self.file_select.pack(pady=5)
 
         # Close out GUI
-        self.close_button = Button(master, text="Close", command=master.quit, bg='orangered2', width=20)
+        self.close_button = Button(master, text="Close", command=master.quit, bg='orangered2', width=10)
         self.close_button.config(font=('Helvetica',12, 'bold'))
-        self.close_button.pack(pady=5)
+        self.close_button.pack(pady=10)
 
     # open serial port for connection and start the program
     def log_data(self):
@@ -566,6 +581,9 @@ class MainProgram:
         ser = serial.Serial(self.com, 38400)
 #        start = time.clock()
         
+        xmin = 0
+        xmax = 10000
+            
         while True:
             msg = ser.readline()
         ##    print(msg)
@@ -579,7 +597,7 @@ class MainProgram:
                     msg = ser.readline()
                     val = msg.split()
                     if val[0].decode() == "L2":
-                        plt.plot(i, total850/lenval, 'y-')
+                        plt.plot(i, total850/lenval, 'y.')
                         lenval = 0
                         break
                     if val[0].decode() != "L1":
@@ -599,7 +617,7 @@ class MainProgram:
                     msg = ser.readline()
                     val = msg.split()
                     if val[0].decode() == "L3":
-                        plt.plot(i, total950/lenval, 'b-')
+                        plt.plot(i, total950/lenval, 'b.')
                         lenval = 0
                         break
         ##            x950.append(val[0])
@@ -614,7 +632,7 @@ class MainProgram:
                     msg = ser.readline()
                     val = msg.split()
                     if val[0].decode() == "L1":
-                        plt.plot(i, total670/lenval, 'r-')
+                        plt.plot(i, total670/lenval, 'r.')
                         lenval = 0
                         break
 
@@ -631,10 +649,9 @@ class MainProgram:
             total850 = 0
             i += 500
             
-            xmin = 0
-            xmax = 10000
+            
             plt.xlim(xmin, xmax)
-            if i > 10000:
+            if i > xmax:
                 xmin += 10000
                 xmax += 10000
                 
@@ -645,7 +662,7 @@ class MainProgram:
 
 def main():
     root = Tk()
-    root.geometry('400x400')
+    root.geometry('300x500')
     my_gui = MainProgram(root)
     root.mainloop()
 
@@ -654,6 +671,7 @@ if __name__ == '__main__':
     
 
     
+
 
 
 
