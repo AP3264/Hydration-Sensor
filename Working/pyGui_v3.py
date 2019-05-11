@@ -11,6 +11,7 @@ import time
 import os
 import datetime
 import numpy as np
+import statistics 
 
 #from pydrive.auth import GoogleAuth
 #from pydrive.drive import GoogleDrive
@@ -216,9 +217,13 @@ class MainProgram:
 
         listOfVals =[]
 
+        list670=[]
+        list850=[]
+        list950=[]
         f = file670
         t = temp670
         a = tempAvg670
+        l = list670
 
         fh = open("datatmp.txt")
         for line in fh:
@@ -234,6 +239,7 @@ class MainProgram:
                     f = file670
                     t = temp670
                     a = tempAvg670
+                    l = list670
                     is670 = True
                     averagedVal = sum(listOfVals) / len(listOfVals)
                     avgLine = str(CycleTime) + '\t' + str(averagedVal)+ '\n'
@@ -257,6 +263,7 @@ class MainProgram:
                     f = file850
                     t = temp850
                     a = tempAvg850
+                    l = list850
                     averagedVal = sum(listOfVals)/len(listOfVals)
                     avgLine = str(CycleTime) + '\t' + str(averagedVal) + '\n'
                     avg670.write(avgLine)
@@ -272,6 +279,7 @@ class MainProgram:
                 f = file950
                 t = temp950
                 a = tempAvg950
+                l = list950
                 averagedVal = sum(listOfVals) / len(listOfVals)
                 avgLine = str(CycleTime) + '\t' + str(averagedVal)+ '\n'
                 avg850.write(avgLine)
@@ -287,13 +295,32 @@ class MainProgram:
                 t.write(line)
                 fileAllPoints.write(line)
                 tempAllPoints.write(line)
-
+        
                 lineVal = line.rstrip('\n')
                 listOfVals.append(float(lineVal.split("\t")[1]))
+                l.append(float(lineVal.split("\t")[1]))
                 
                 # print(listOfVals)
                 
-            
+        
+        mean670 = statistics.mean(list670)
+        stdev670 = statistics.stdev(list670)
+        snr670 = 20 * (np.log10(mean670/stdev670)) # snr val in dB
+        file670.write("SNR: ")
+        file670.write(str(snr670))
+        
+        mean850 = statistics.mean(list850)
+        stdev850 = statistics.stdev(list850)
+        snr850 = 20 * (np.log10(mean850/stdev850)) # snr val in dB
+        file850.write("SNR: ")
+        file850.write(str(snr850))
+        
+        mean950 = statistics.mean(list950)
+        stdev950 = statistics.stdev(list950)
+        snr950 = 20 * (np.log10(mean950/stdev950)) # snr val in dB
+        file950.write("SNR: ")
+        print(snr950)
+        file950.write(str(snr950))
                 
               
         ## DONT FORGET TO ENABLE GOOGLE DRIVE API IN THE CREDENTIALS PAGE
@@ -309,10 +336,15 @@ class MainProgram:
 #        file1.SetContentFile(filepath) # Set content of the file from given string.
 #        file1.Upload()
 
+
+#        
+        
+
         fh.close()
         file670.close()
         file850.close()
         file950.close()
+        
         fileAllPoints.close()
         avg670.close()
         avg850.close()
@@ -325,6 +357,7 @@ class MainProgram:
         tempAvg850.close()
         tempAvg950.close()
         tempAllPoints.close()
+        
 
     # add headers to text file
     def add_headers(self):
@@ -346,6 +379,7 @@ class MainProgram:
     def file_selector(self):
         sub = Tk()
         sub.geometry('200x200')
+
         
     # grab data from text file and plot using matplotlib
     def plotGraph(self):
@@ -620,6 +654,7 @@ if __name__ == '__main__':
     
 
     
+
 
 
 
