@@ -99,19 +99,15 @@ void setup( void )
   digitalWrite(enablePin_LED, LOW);
   
   digitalWrite(enablePin, HIGH);
-  
   digitalWrite(enablePin_gain, LOW);
-
-//  digitalWrite(mux1,LOW);
-//  digitalWrite(mux2,LOW);
-//  digitalWrite(mux3,LOW);
-
+  
+  // Wait for Python input
   while(!Serial.available());
   {
     Serial.println("waiting for gain");
-
   }
 
+  //Logic for multiplexer select
   while(Serial.available()) {
     // Gain Multiplexer
     data = Serial.read();  // data is gain value: 1,5,10,15,20
@@ -160,70 +156,7 @@ void setup( void )
       digitalWrite(enablePin_gain, LOW);
     }
   }
-
-//   while(!Serial.available());
-//  {
-//    Serial.println("waiting for gain");
-//
-//  }
-
-//  while(Serial.available()) {
-//    pot_data = Serial.read(); 
-//
-//    if (pot_data == '1')
-//    {
-//    // current 10
-//      digPot670 = 217;
-//      Serial.println(digPot670);
-//      digPot850 = 232;
-//      digPot950 = 244;
-//    }
-//
-//    else if (pot_data == '2')
-//    {
-//      // current 15
-//      digPot670 = 122;
-//      digPot850 = 131;
-//      digPot950 = 137;
-//    }
-//
-//    else if (pot_data == '3')
-//    {
-//      // current 20
-//      digPot670 = 76;
-//      digPot850 = 82;
-//      digPot950 = 87;
-//    }
-//
-//    else if (pot_data == '4')
-//    {
-//      // current 25
-//      digPot670 = 50;
-//      digPot850 = 55;
-//      digPot950 = 58;
-//    }
-//
-//    else if (pot_data == '5')
-//    {
-//      // current 30
-//      digPot670 = 33;
-//      digPot850 = 37;
-//      digPot950 = 39;
-//    }
-//
-//    else if (pot_data == '6')
-//    {
-//      // current 35
-//      digPot670 = 21;
-//      digPot850 = 25;
-//      digPot950 = 26;
-//    }
-//  }
-//      digPot670 = 217;
-//      digPot850 = 232;
-//      digPot950 = 244;
-  
-  
+   
   Start = millis();
   timer = micros();
   
@@ -293,7 +226,6 @@ void loop( void )
   {
     if (Count == 0)
     {
-//      Serial.println("L1");
     // routing the signal to the filter (pre-filtered signal)
     // channel A0 ON
 
@@ -306,29 +238,14 @@ void loop( void )
     digitalWrite(mux2,LOW); //S1
     digitalWrite(mux3,LOW); //S2
     digitalWrite(enablePin, LOW);
-//    delay(5);
     }
 
-
-
-    // Logic for multiplexer switching the LEDS (670nm)
-    // Channel A0 ON
-//    digitalWrite(driverPin, HIGH);
-
-//    digitalWrite(enablePin_LED, LOW);
-    
-//    digitalWrite(driverPin, LOW);
-//    delay(5);
-//    delay(5);
-//    digitalWrite(driverPin, HIGH);
     delay(readSpeed);    
 
 
     add_to_list(valList670, time670,0);
     ++Count;
-    
-    // Turn Channel A0 off for LED mux
-    
+     
     
   }
 
@@ -336,7 +253,6 @@ void loop( void )
   else if ((millis() - Start >= CycleTime) && (millis() - Start < (CycleTime + PauseTime)))
   {
     // Turn off 670 (switches)
-//    digitalWrite(enablePin_LED, HIGH);
     digitalWrite(enablePin,HIGH);
     digitalWrite(ledPin670,HIGH);
     digitalWrite(ledPin850,HIGH);
@@ -349,8 +265,6 @@ void loop( void )
   else if ((millis() - Start >= (CycleTime+PauseTime)) && (millis() - Start < (2*CycleTime+PauseTime)))
   {
     if (Count2 == 0){
-//    Serial.println("L2");
-
     digitalWrite(enablePin,HIGH);
         // Turn channel A1 on
     digitalWrite(ledPin670,HIGH);
@@ -361,29 +275,17 @@ void loop( void )
     digitalWrite(mux2,LOW);  // S1
     digitalWrite(mux3,LOW);  // S2
     digitalWrite(enablePin, LOW);
-//    delay(5); 
     }
-
-
-
-    // Logic for multiplexer switching the LEDS (850nm)
-
-//    digitalWrite(enablePin_LED, LOW);  
 
     delay(readSpeed);
     
     add_to_list(valList850, time850,1);
     ++Count2;
-
-    // Turn Channel A1 off for LED mux
-
   }
 
   //interval between LED switch
   else if ((millis() - Start) >= ((2*CycleTime)+(PauseTime)) && (millis() - Start) < ((2*CycleTime)+(2*PauseTime)))
   {
-    // for switches logic
-//    digitalWrite(enablePin_LED, HIGH);
     digitalWrite(enablePin, HIGH);
     digitalWrite(ledPin670,HIGH);
     digitalWrite(ledPin850,HIGH);
@@ -395,8 +297,6 @@ void loop( void )
   {
     if (Count3 == 0)
     {
-//    Serial.println("L3");
-
     digitalWrite(enablePin, HIGH);
     digitalWrite(ledPin670, HIGH);
     digitalWrite(ledPin850,HIGH);
@@ -406,32 +306,18 @@ void loop( void )
     digitalWrite(mux2,HIGH); //S1
     digitalWrite(mux3,LOW);  //S2
     digitalWrite(enablePin, LOW);
-//    delay(5);
     }
-
-  /// for switches logic
-  // turn channel A2
-//    digitalWrite(driverPin, HIGH);
     
-
-
     delay(readSpeed);
-
-
+    
     add_to_list(valList950, time950,2);
     ++Count3;
-
-    // Turn Channel A2 off for LED mux
-//    digitalWrite(enablePin,HIGH);
   }
 
   //Process collected data, reset all values, reset timer
   else
   {
-    // for switches logic
-//    digitalWrite(enablePin_LED, HIGH);
     digitalWrite(enablePin, HIGH);
-//    digitalWrite(driverPin, LOW);
     digitalWrite(ledPin670, HIGH);
     digitalWrite(ledPin850, HIGH);
     digitalWrite(ledPin950,HIGH);
@@ -458,18 +344,12 @@ void loop( void )
         break;
         }
     }
-
-//    digitalWrite(ledPin670, HIGH);
-//    digitalWrite(ledPin850,HIGH);
-//    digitalWrite(ledPin950,HIGH);
-//    digitalWrite(enablePin, LOW);
     
     Count = 0;
     Count2 = 0;
     Count3 = 0;
     Start = millis();
 
-  //  digitalWrite(enablePin,HIGH);
     }
     
 }
