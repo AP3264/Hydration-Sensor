@@ -15,8 +15,6 @@ import statistics
 import serial.tools.list_ports
 import warnings
 
-#from pydrive.auth import GoogleAuth
-#from pydrive.drive import GoogleDrive
 
 #set datetime for folder naming
 now = datetime.datetime.now()
@@ -32,32 +30,37 @@ class MainProgram:
 
     def __init__(self, master):
         self.master = master
-        self.com = ""
+       # self.com = "/dev/cu.usbmodem144302"
         self.connected = False
         self.ser = None
         self.fname = "data.txt"
         master.title("Hydration Sensor")
-#        self.time = 15
-
+        self.running = True  # Global flag
+        self.marker = False
+        self.mark_pt = []
+        
         arduino_ports = [
-            p.device
-            for p in serial.tools.list_ports.comports()
-            if 'mEDBG' in p.description  # may need tweaking to match new arduinos
-        ]
-        print (arduino_ports)
+           p.device
+           for p in serial.tools.list_ports.comports()
+           #if p.description != None  # may need tweaking to match new arduinos
+               if "mEDBG" in p.description
+       ]
+
         if not arduino_ports:
             raise IOError("No Arduino found")
         if len(arduino_ports) > 1:
             warnings.warn('Multiple Arduinos found - using the first')
 
         self.com = arduino_ports[0]
+#         self.time = 15 # default test time duration is 15 seconds
 
         # create buttons for GUI
-        self.img = PhotoImage(file='Drexel_Logo.gif')
-        self.img = self.img.zoom(20, 5)
-        self.img = self.img.subsample(60, 15)
-        self.img_label = Label(master, image=self.img)
-        self.img_label.pack()
+                
+#        self.img = PhotoImage(file='Drexel_Logo.gif')
+#        self.img = self.img.zoom(20, 5)
+#        self.img = self.img.subsample(60, 15)
+#        self.img_label = Label(master, image=self.img)
+#        self.img_label.pack()
 
         self.label = Label(master, text="Hydration Sensor")
         self.label.config(font=('Helvetica',16, 'bold'))
@@ -65,6 +68,7 @@ class MainProgram:
         
         # Enter time duration first!!! and then hit log data
         time_duration = Label(master, text="Enter Time Duration for Test (in sec): ")
+        time_duration.config(font=('Helvetica',10, 'bold'))
         time_duration.pack()
         
         self.time_duration = Entry(master)
@@ -72,6 +76,7 @@ class MainProgram:
         
         # Enter current level
         current_level = Label(master, text="Enter Current: ")
+        current_level.config(font=('Helvetica',10, 'bold'))
         current_level.pack()
         
         self.current_level = Entry(master)
@@ -79,6 +84,7 @@ class MainProgram:
         
         # Enter gain value
         gain_val = Label (master, text="Enter Gain: ")
+        gain_val.config(font=('Helvetica',10, 'bold'))
         gain_val.pack()
         
         self.gain_val = Entry(master)
@@ -86,35 +92,50 @@ class MainProgram:
         
         # Enter test step description
         test_label = Label(master, text="Enter Test Description: ")
+        test_label.config(font=('Helvetica',10, 'bold'))
         test_label.pack()
         
         self.test_label = Entry(master)
         self.test_label.pack()
-
+        
         # Log Button
-        self.log_button = Button(master, text="Log Data", command=self.log_data, bg = 'aquamarine2',width=20)
+        self.log_button = Button(master, text="Log Data", command=self.log_data, fg = "light goldenrod", highlightbackground = 'navy blue',width=20)
         self.log_button.config(font=('Helvetica',12, 'bold'))
-        self.log_button.pack(padx = 5, pady=5)
+        self.log_button.pack(pady=5)
         
         # Plot Button
-        self.plot_button = Button(master, text="Plot Graph", bg = 'azure',command=self.plotGraph,width=20)
+        self.plot_button = Button(master, text="Plot Graph", fg = "light goldenrod", highlightbackground = 'navy blue',command=self.plotGraph,width=20)
         self.plot_button.config(font=('Helvetica',12, 'bold'))
         self.plot_button.pack(pady=5)
         
-        # Live Plot
-        self.live_plot_button = Button(master, text="Live Plot", bg = 'SteelBlue1',command=self.LivePlot,width=20)
-        self.live_plot_button.config(font=('Helvetica',12, 'bold'))
-        self.live_plot_button.pack(pady=5)
-        
-        # Select Files to Plot
-        self.file_select = Button(master, text="Select up to 4 Files to Plot", bg = 'SlateBlue2', command=self.plotSelectedGraph, width=20)
+        self.file_select = Button(master, text="Select Files to Plot",fg = "light goldenrod", highlightbackground = 'navy blue', command=self.plotSelectedGraph, width=20)
         self.file_select.config(font=('Helvetica',12, 'bold'))
         self.file_select.pack(pady=5)
+        
+        # Live Plot
+        self.live_plot_button = Button(master, text="Live Plot", fg = "light goldenrod", highlightbackground = 'navy blue',command=self.LivePlot,width=20)
+        self.live_plot_button.config(font=('Helvetica',12, 'bold'))
+        self.live_plot_button.pack(pady=3)
+        
+        self.stop = Button(master, text="Stop", command=self.stop, highlightbackground = "light goldenrod", fg = 'navy blue',width = 10)
+        self.stop.config(font=('Helvetica', 10,'bold'))
+        self.stop.pack(pady=3)
+
+        self.mark = Button(master, text="Mark Point", command=self.mark, highlightbackground = "light goldenrod", fg = 'navy blue',width = 10)
+        self.mark.config(font=('Helvetica', 10,'bold'))
+        self.mark.pack(pady=3)
+        
+        # Select Files to Plot
+
+        self.mark = Button(master, text="Test", command=self.test, highlightbackground = "light goldenrod", fg = 'navy blue',width = 20)
+        self.mark.config(font=('Helvetica', 10,'bold'))
+        self.mark.pack(pady=3)
+
 
         # Close out GUI
-        self.close_button = Button(master, text="Close", command=master.quit, bg='orangered2', width=10)
+        self.close_button = Button(master, text="Close", command=master.quit,fg = 'midnight blue', bg='red', width=15)
         self.close_button.config(font=('Helvetica',12, 'bold'))
-        self.close_button.pack(pady=10)
+        self.close_button.pack(pady=30)
 
     # open serial port for connection and start the program
     def log_data(self):
@@ -124,11 +145,49 @@ class MainProgram:
         print(self.ser)
         if self.ser is not None:
             print("Connected")
+        time.sleep(1)
             
         # Get User Input for Length of the Test
         global time_duration
         time_duration = float(self.time_duration.get())
         self.time = time_duration
+        
+        global gain_val
+        gain_val = self.gain_val.get()
+#        gain_val = str(self.gain_val)
+        
+        global current_level #10,15,20,25,35
+        current_level = self.current_level.get()
+        
+        
+        if gain_val == '20':
+            self.ser.write(b'5')
+        elif gain_val == '5':
+            self.ser.write(b'2')
+            print("A1")
+        elif gain_val == '10':
+            self.ser.write(b'3')
+            print("A2")
+        elif gain_val == '15':
+            self.ser.write(b'4')
+            print("A3")
+        else: # default is gain 1
+            self.ser.write(b'1')
+            
+##        if current_level == "10":
+##            self.ser.write(b'1')
+##        elif current_level == '15':
+##            self.ser.write(b'2')
+##        elif current_level == '25':
+##            self.ser.write(b'4')
+##        elif current_level == '30':
+##            self.ser.write(b'5')
+##        elif current_level == '35':
+##            self.ser.write(b'6')
+##        else: # default is current 20
+##            self.ser.write(b'3')
+            
+        
 
         self.save_result(self.ser, self.fname, self.time)
         self.remove_lines(self.fname)
@@ -140,6 +199,7 @@ class MainProgram:
         val = True
         text_file = open(file_name, 'w+')
         count = 0
+        
 
         print('Readable =',serial.readable())
         start = time.time()
@@ -154,6 +214,10 @@ class MainProgram:
             text_file.write(msg)
             end = time.time()
             count += 1
+            if self.marker == True:
+                 self.mark_pt.append(msg)
+                 self.markoff()
+            
             if (count % self.time*2) == 0:
                 print('.', end='')
 
@@ -206,6 +270,7 @@ class MainProgram:
         
         global gain_val
         gain_val = self.gain_val.get()
+#        gain_val = str(self.gain_val)
         
         file670 = open(final_dir+"file670_"+ current_level + "mA_gain" + gain_val + "_" + timestr + ".txt", 'w+')
         file850 = open(final_dir+"file850_"+ current_level + "mA_gain" + gain_val+ "_" + timestr + ".txt", 'w+')
@@ -228,6 +293,10 @@ class MainProgram:
 
         fileList = [file670,file850,file950,fileAllPoints,tempAllPoints,tempAvg670, tempAvg850, tempAvg950, tempAvgPoint, temp670,temp850,temp950,avg670,avg850,avg950,avgAllPoints]
         for file in fileList:
+            file.write('Important Markers: ')
+            for item in self.mark_pt:
+                file.write(str(item) + ',')
+            file.write('\t')
             file.write(self.add_headers())
 
         listOfVals =[]
@@ -315,46 +384,46 @@ class MainProgram:
                 listOfVals.append(float(lineVal.split("\t")[1]))
                 l.append(float(lineVal.split("\t")[1]))
                 
-                # print(listOfVals)
-                
+        
+        list670 = list670[40:]
+        list850 = list850[40:]
+        list950 = list950[40:]
         
         mean670 = statistics.mean(list670)
         stdev670 = statistics.stdev(list670)
-        snr670 = 20 * (np.log10(mean670/stdev670)) # snr val in dB
-        file670.write("SNR: ")
-        file670.write(str(snr670))
+        if stdev670 != 0:
+            snr670 = 20 * (np.log10(mean670/stdev670)) # snr val in dB
+        else:
+            snr670 = "invalid"
+            
+#        file670.write("SNR: ")
+#        print("SNR 670: ")
+#        print(snr670)
+#        file670.write(str(snr670))
         
         mean850 = statistics.mean(list850)
         stdev850 = statistics.stdev(list850)
-        snr850 = 20 * (np.log10(mean850/stdev850)) # snr val in dB
-        file850.write("SNR: ")
-        file850.write(str(snr850))
+        if stdev850 != 0:
+            snr850 = 20 * (np.log10(mean850/stdev850)) # snr val in dB
+        else:
+            snr850 = "invalid"
+            
+#        file850.write("SNR: ")
+#        print("SNR 850: ")
+#        print(snr850)
+#        file850.write(str(snr850))
         
         mean950 = statistics.mean(list950)
         stdev950 = statistics.stdev(list950)
-        snr950 = 20 * (np.log10(mean950/stdev950)) # snr val in dB
-        file950.write("SNR: ")
-        print(snr950)
-        file950.write(str(snr950))
+        if stdev950 != 0:
+            snr950 = 20 * (np.log10(mean950/stdev950)) # snr val in dB
+        else:
+            snr950 = "invalid"
+#        file950.write("SNR: ")
+#        print("SNR 950: ")
+#        print(snr950)
+#        file950.write(str(snr950))
                 
-              
-        ## DONT FORGET TO ENABLE GOOGLE DRIVE API IN THE CREDENTIALS PAGE
-        
-#        gauth = GoogleAuth()
-#        gauth.LocalWebserverAuth()
-#        # need to download client_secrets.json file:
-#        # Google development console https://console.developers.google.com/projectselector2/apis/credentials?supportedpurview=project
-#        drive = GoogleDrive(gauth)
-#        
-#        filepath="/Users/anishipatel/Documents/Spring 2019/ECE 493/data.txt"
-#        file1 = drive.CreateFile({'title': 'data.txt'})  # Create GoogleDriveFile instance with title 'Hello.txt'.
-#        file1.SetContentFile(filepath) # Set content of the file from given string.
-#        file1.Upload()
-
-
-#        
-        
-
         fh.close()
         file670.close()
         file850.close()
@@ -408,25 +477,25 @@ class MainProgram:
         yall = []
         with open(final_dir+'tempAvg670.txt') as f:
             for i, line in enumerate(f):
-                if i > 8:
+                if i > 14:
                     x.append(int(line.split()[0]) / 1000.0)
                     y.append(float(line.split()[1]))
 
         with open(final_dir+'tempAvg850.txt') as f:
             for i, line in enumerate(f):
-                if i > 8:
+                if i > 14:
                     x2.append(int(line.split()[0]) / 1000.0)
                     y2.append(float(line.split()[1]))
 
         with open(final_dir+'tempAvg950.txt') as f:
             for i, line in enumerate(f):
-                if i > 8:
+                if i > 14:
                     x3.append(int(line.split()[0]) / 1000.0)
                     y3.append(float(line.split()[1]))
 
         with open(final_dir+'avgAllPoint.txt') as f:
             for i, line in enumerate(f):
-                if i > 8:
+                if i > 14:
                     xall.append(int(line.split()[0]) / 1000.0)
                     yall.append(float(line.split()[1]))
 
@@ -439,6 +508,7 @@ class MainProgram:
         plt.title('Voltage Sweep Over Time')
         plt.xlabel('Time(ms)')
         plt.ylabel('Voltage(mV)')
+        plt.gca().legend(('670nm','850nm', '950nm'))
         plt.show()
 
         
@@ -566,9 +636,24 @@ class MainProgram:
         plt.title('Voltage Sweep Over Time')
         plt.xlabel('Time(ms)')
         plt.ylabel('Voltage(mV)')
-        plt.show()
+        plt.show(block=False)
+        
+
+    def mark(self):
+        self.marker = True
+        
+    def markoff(self):
+        self.marker = False
+        
+    def stop(self):
+        global running
+        self.running = False
+        
+    
         
     def LivePlot(self):
+        
+        self.running = True
         plt.ion()
         fig=plt.figure()
         i=500
@@ -577,97 +662,186 @@ class MainProgram:
         total850 = 0
         total950 = 0
         lenval = 0
+        
+        list_670, list_850, list_950 = [],[],[]
+        time_670, time_850, time_950 = [],[],[]
+        markers = []
+        
         cont = True
         ser = serial.Serial(self.com, 38400)
-#        start = time.clock()
+        time.sleep(1)
+        
+        global gain_val
+        gain_val = self.gain_val.get()
+        
+        global current_level #10,15,20,25,35
+        current_level = self.current_level.get()
+        
+        
+        if gain_val == '20':
+            ser.write(b'5')
+        elif gain_val == '5':
+            ser.write(b'2')
+            print("A1")
+        elif gain_val == '10':
+            ser.write(b'3')
+            print("A2")
+        elif gain_val == '15':
+            ser.write(b'4')
+            print("A3")
+        else: # default is gain 1
+            ser.write(b'1')
         
         xmin = 0
         xmax = 10000
-            
+        
         while True:
-            msg = ser.readline()
-        ##    print(msg)
-            if count == 1:
-                msg = msg[1:-1]
-                count = 0
-        ##    print(msg.decode())
-            val = msg.split()
-            if val[0].decode() == "L1":
-                while cont:
-                    msg = ser.readline()
-                    val = msg.split()
-                    if val[0].decode() == "L2":
-                        plt.plot(i, total850/lenval, 'y.')
-                        lenval = 0
-                        break
-                    if val[0].decode() != "L1":
-        ##                print(msg.decode())
-        ##                x850.append(val[0])
-        ##                y850.append(val[1].decode())
-                        total850 += float(val[1].decode())
+            
+##            if idx % 500 == 0:
+##                break
+####                master.update()
+                
+            if self.running:
+                msg = ser.readline()
+                if count == 1:
+                    msg = msg[1:-1]
+                    count = 0
+                val = msg.split()
+                if val[0].decode() == "L1":
+                    while cont:
+                        msg = ser.readline()
+                        val = msg.split()
+                        if val[0].decode() == "L2":
+                            plt.plot(i, total850/lenval, 'y.')
+                            lenval = 0
+                            if self.marker == True:
+                                self.marker == False
+                                plt.axvline(x = i)
+                                markers.append(i)
+                                self.markoff()
+                                
+                            break
+                        if val[0].decode() != "L1":
+                            total850 += float(val[1].decode())
+                            time_850.append(int(val[0].decode()))
+                            list_850.append(float(val[1].decode()))
+                            lenval += 1
+              
+                if val[0].decode() == "L2":
+                    while cont:
+
+                        msg = ser.readline()
+                        val = msg.split()
+                        if val[0].decode() == "L3":
+                            plt.plot(i, total950/lenval, 'g.')
+                            lenval = 0
+                            if self.marker == True:
+                                self.marker == False
+                                plt.axvline(x = i)
+                                markers.append(i)
+                                self.markoff()
+                                
+                            break
+                        total950 += float(val[1].decode())
+                        time_950.append(int(val[0].decode()))
+                        list_950.append(float(val[1].decode()))
                         lenval += 1
+                    
+                if val[0].decode() == "L3":
+                    while cont:
+                        msg = ser.readline()
+                        val = msg.split()
+                        if val[0].decode() == "L1":
+                            plt.plot(i, total670/lenval, 'r.')
+                            lenval = 0
+                            if self.marker == True:
+                                self.marker == False
+                                plt.axvline(x = i)
+                                markers.append(i)
+                                self.markoff()
+                                
+                            break
 
+                        total670 += float(val[1].decode())
+                        time_670.append(int(val[0].decode()))
+                        list_670.append(float(val[1].decode()))
+                        lenval += 1
                         
-
-        ##                plt.plot(float(val[0])/1000, float(val[1].decode()), 'yx-')
+                        
+                total670 = 0
+                total950 = 0
+                total850 = 0
+                i += 500
                 
-            if val[0].decode() == "L2":
-                while cont:
 
-                    msg = ser.readline()
-                    val = msg.split()
-                    if val[0].decode() == "L3":
-                        plt.plot(i, total950/lenval, 'b.')
-                        lenval = 0
-                        break
-        ##            x950.append(val[0])
-        ##            y950.append(val[1].decode())
-                    total950 += float(val[1].decode())
-                    lenval += 1
-
-        ##            plt.plot(float(val[0])/1000, float(val[1].decode()), 'bx-')
-                
-            if val[0].decode() == "L3":
-                while cont:
-                    msg = ser.readline()
-                    val = msg.split()
-                    if val[0].decode() == "L1":
-                        plt.plot(i, total670/lenval, 'r.')
-                        lenval = 0
-                        break
-
-                    total670 += float(val[1].decode())
-                    lenval += 1
-        ##            x670.append(val[0])
-        ##            y670.append(val[1].decode())
-
-        ##            plt.plot(float(val[0])/1000, float(val[1].decode()), 'rx-')
+                plt.xlim(xmin, xmax)
+                if i > xmax:
+                    xmin += 10000
+                    xmax += 10000
                     
-                    
-            total670 = 0
-            total950 = 0
-            total850 = 0
-            i += 500
-            
-            
-            plt.xlim(xmin, xmax)
-            if i > xmax:
-                xmin += 10000
-                xmax += 10000
+                plt.gca().legend(('850nm','950nm', '670nm'))    
+                plt.show()
+                plt.pause(0.0001)  # Note this correction
                 
+            else:
+                break
+            
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+            
+        file670 = open(final_dir+"file670_"+ current_level + "mA_gain" + gain_val + "_" + timestr + ".txt", 'w+')
+        file850 = open(final_dir+"file850_"+ current_level + "mA_gain" + gain_val+ "_" + timestr + ".txt", 'w+')
+        file950 = open(final_dir+"file950_"+ current_level + "mA_gain" + gain_val + timestr + ".txt", 'w+')
+        
+        avgfile670 = open(final_dir+"avgfile670_"+ current_level + "mA_gain" + gain_val + "_" + timestr + ".txt", 'w+')
+        avgfile850 = open(final_dir+"avgfile850_"+ current_level + "mA_gain" + gain_val+ "_" + timestr + ".txt", 'w+')
+        avgfile950 = open(final_dir+"avgfile950_"+ current_level + "mA_gain" + gain_val + timestr + ".txt", 'w+')
+        
+        fileList = [file670,file850,file950]
+        for file in fileList:
+            file.write('Important Markers: ')
+            for item in markers:
+                file.write(str(item) + ',')
+            file.write('\t')
                 
-            plt.show()
-            plt.pause(0.0001)  # Note this correction
+            file.write(self.add_headers())
+            
+        for tim in range(len(list_670)):
+                line = str(time_670[tim]) + '\t' + str(list_670[tim]) + '\n'
+                file670.write(line)
+                
+        for tim in range(len(list_850)):
+                line = str(time_850[tim]) + '\t' + str(list_850[tim]) + '\n'
+                file850.write(line)
+                
+        for tim in range(len(list_950)):
+                line = str(time_950[tim]) + '\t' + str(list_950[tim]) + '\n'
+                file950.write(line)
+#                
+#        print(time_670, list_670, time_850, list_850, time_950, list_950)
+
+    def test(self):
+        self.gain_val = 1
+        self.log_data()
+#        self.plotGraph()
+        time.sleep(7)
+        for i in range(5,25,5):
+            self.gain_val = i
+            self.log_data()
+            time.sleep(7)
+
+        
 
 
 def main():
     root = Tk()
-    root.geometry('300x500')
+    root.geometry('400x600')
     my_gui = MainProgram(root)
     root.mainloop()
 
 if __name__ == '__main__':
     main()
+    
+        
     
 
     
