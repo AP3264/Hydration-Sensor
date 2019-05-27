@@ -52,4 +52,7 @@ hold on
 plot(time, test_950(:,3), 'g-', 'linewidth', 1);
 
 
+[b,a] = butter(12,0.1,'low');           % IIR filter design zero phase
+y = filtfilt(b,a,conc');    %apply to all data
+figure; plot(conc');hold on; plot(y)  %show new figure
 
